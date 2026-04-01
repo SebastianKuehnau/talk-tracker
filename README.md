@@ -8,7 +8,7 @@ Talk Tracker is a web application for managing conference talks:
 
 - **View & filter talks** — Grid with lazy loading and real-time text filter (title, speaker, description, language, category)
 - **Create, edit & delete talks** — Form with Bean Validation
-- **AI summarization** — Summarize talk descriptions into a single sentence using OpenAI
+- **AI summarization** — Summarize talk descriptions into a single sentence using Ollama (local LLM)
 - **Live registrations** — Simulated attendee registrations updating every 300ms via Vaadin Push
 
 ## Tech Stack
@@ -18,14 +18,14 @@ Talk Tracker is a web application for managing conference talks:
 | Java | 21 |
 | Spring Boot | 4.0.5 |
 | Vaadin (Flow) | 25.1 |
-| Spring AI (OpenAI) | 2.0.0-M3 |
+| Spring AI (Ollama) | 2.0.0-M3 |
 | Database | H2 (in-memory) |
 | Build | Maven (Wrapper) |
 
 ## Prerequisites
 
 - **Java 21** (JDK) — e.g. via [SDKMAN](https://sdkman.io/): `sdk install java 21-tem`
-- **OpenAI API Key** — required for the AI summarization feature
+- **Ollama** — required for the AI summarization feature ([Install Ollama](https://ollama.com/download))
 
 ## Getting Started
 
@@ -36,13 +36,20 @@ git clone <repository-url>
 cd talk-tracker
 ```
 
-### 2. Set the OpenAI API Key
+### 2. Install and start Ollama
 
 ```bash
-export OPENAI_API_KEY=sk-...
+# Install Ollama (macOS)
+brew install ollama
+
+# Start the Ollama server
+ollama serve
+
+# Pull the required model
+ollama pull qwen3.5:0.8b
 ```
 
-Alternatively, set it directly in `src/main/resources/application.properties` (don't commit this!).
+The app expects Ollama running on `http://localhost:11434` with the `qwen3.5:0.8b` model. You can change the model in `application.properties`.
 
 ### 3. Run the application
 
@@ -87,5 +94,5 @@ src/main/java/dev/workshop/vaadin/talktracker/
 ## Notes
 
 - The H2 database is in-memory — data is lost on restart. 20 sample talks are created automatically on startup.
-- Without a valid `OPENAI_API_KEY`, the summarization feature won't work, but the rest of the app runs normally.
+- Without a running Ollama instance, the summarization feature won't work, but the rest of the app runs normally.
 - Actuator endpoints are available at `/actuator/health`, `/actuator/metrics`, `/actuator/prometheus`.
