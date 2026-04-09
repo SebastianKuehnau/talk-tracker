@@ -1,13 +1,13 @@
 ## Setup Instructions for the Vaadin Workshop
 
-#### 0. Prerequisites: Java 25 and an IDE (Eclipse, IntelliJ, or VS Code).
+#### 0. Prerequisites: Java 25 and your favored IDE (Eclipse, IntelliJ, or VS Code).
 
 For more details, see: https://vaadin.com/docs/latest/getting-started/dev-environment
 
 ### 1. Clone or download the repo
 
 ```bash
-git clone https://github.com/SebastianKuehnau/talk-tracker.git
+git clone --branch events/springio-26/step/01-first-view --single-branch https://github.com/SebastianKuehnau/talk-tracker.git
 cd talk-tracker
 ```
 
