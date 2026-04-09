@@ -1,6 +1,7 @@
 package dev.workshop.vaadin.talktracker.ui.talks;
 
 import com.vaadin.browserless.SpringBrowserlessTest;
+import dev.workshop.vaadin.talktracker.data.Talk;
 import dev.workshop.vaadin.talktracker.data.TalkRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,5 +26,12 @@ public class TalkDetailViewTest extends SpringBrowserlessTest {
     @Test
     public void allDataVisibleInGrid() {
         assertEquals(view.grid.getGenericDataView().getItems().count(), talkRepository.count());
+    }
+
+    @Test
+    public void testSelectTalk() {
+        Talk firstTalk = view.grid.getGenericDataView().getItem(0);
+        view.grid.select(firstTalk);
+        assertEquals(view.descriptionForm.description.getValue(), firstTalk.getDescription());
     }
 }
