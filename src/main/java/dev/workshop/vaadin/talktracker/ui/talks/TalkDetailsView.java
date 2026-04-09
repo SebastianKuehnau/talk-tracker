@@ -15,7 +15,7 @@ import org.springframework.data.jpa.domain.Specification;
 @Route("")
 public class TalkDetailsView extends VerticalLayout {
 
-    private final Grid<Talk> grid;
+    final Grid<Talk> grid;
     private final TalkRepository talkRepository;
 
     public TalkDetailsView(TalkRepository talkRepository) {
