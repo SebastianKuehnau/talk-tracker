@@ -7,7 +7,7 @@ For more details, see: https://vaadin.com/docs/latest/getting-started/dev-enviro
 ### 1. Clone or download the repo
 
 ```bash
-git clone --branch events/springio-26/step/01-first-view --single-branch https://github.com/SebastianKuehnau/talk-tracker.git
+git clone --branch events/springio-26/step/02-sinple-data-view-start --single-branch https://github.com/SebastianKuehnau/talk-tracker.git
 cd talk-tracker
 ```
 
