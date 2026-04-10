@@ -59,10 +59,10 @@
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-spring-boot-starter</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.ai</groupId>
-			<artifactId>spring-ai-starter-model-openai</artifactId>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.ai</groupId>-->
+<!--			<artifactId>spring-ai-starter-model-openai</artifactId>-->
+<!--		</dependency>-->
         <!-- spring-boot-devtools: Enables automatic server restart on classpath changes
             - Vaadin detects the restart and triggers a browser live reload
             - Uses a custom classloader to restart only application classes (faster than full restart)
