@@ -46,7 +46,7 @@
 
   "remoteEnv": {
     // Set OPENAI_API_KEY as a Codespaces secret in your repository settings.
-    "SPRING_AI_OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}"
+    "SPRING_AI_OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY:-dummy}"
   },
 
   "hostRequirements": {
