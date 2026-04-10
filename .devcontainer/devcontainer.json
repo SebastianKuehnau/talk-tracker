@@ -42,7 +42,7 @@
 
   // Pre-download all Maven dependencies so the first ./mvnw spring-boot:run
   // doesn't need to hit the internet. Works great with Codespaces Prebuilds.
-  "postCreateCommand": "./mvnw dependency:go-offline -q",
+  "postCreateCommand": "./mvnw package",
 
   "hostRequirements": {
     "memory": "8gb",
