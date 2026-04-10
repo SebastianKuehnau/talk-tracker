@@ -1,0 +1,51 @@
+{
+  "name": "Talk Tracker",
+
+  // Java 25 is not yet in the stable devcontainers/java image.
+  // We use the Ubuntu base + java feature to install any JDK version.
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "25",
+      "jdkDistro": "ms",
+      "installMaven": "false",
+      "installGradle": "false"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      // Extensions recommended by https://vaadin.com/docs/latest/getting-started/dev-environment/install-ide
+      "extensions": [
+        "vaadin.vaadin-vscode",
+        "vscjava.vscode-java-pack",
+        "vmware.vscode-boot-dev-pack"
+      ],
+      "settings": {
+        "java.configuration.runtimes": [
+          { "name": "JavaSE-25", "default": true }
+        ],
+        "spring-boot.ls.java.heap": "1024m",
+        "java.jdt.ls.vmargs": "-Xmx2g"
+      }
+    }
+  },
+
+  "forwardPorts": [8080],
+  "portAttributes": {
+    "8080": {
+      "label": "Talk Tracker UI",
+      "onAutoForward": "openBrowser"
+    }
+  },
+
+  // Pre-download all Maven dependencies so the first ./mvnw spring-boot:run
+  // doesn't need to hit the internet. Works great with Codespaces Prebuilds.
+  "postCreateCommand": "./mvnw dependency:go-offline -q",
+
+  "hostRequirements": {
+    "memory": "8gb",
+    "cpus": 2
+  }
+}
