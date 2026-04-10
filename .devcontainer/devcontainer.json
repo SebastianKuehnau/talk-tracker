@@ -44,6 +44,11 @@
   // doesn't need to hit the internet. Works great with Codespaces Prebuilds.
   "postCreateCommand": "./mvnw package",
 
+  "remoteEnv": {
+    // Set OPENAI_API_KEY as a Codespaces secret in your repository settings.
+    "SPRING_AI_OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}"
+  },
+
   "hostRequirements": {
     "memory": "8gb",
     "cpus": 2
