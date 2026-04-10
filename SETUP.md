@@ -22,3 +22,7 @@ Or download the project as a [ZIP file](https://github.com/SebastianKuehnau/talk
 ```
 
 and open http://localhost:8080/ in your browser.
+
+> **No local setup?** You can also build and run this project in [GitHub Codespaces](https://github.com/codespaces). All you need is a GitHub account (a free account is sufficient). Codespaces provides a pre-configured cloud environment with everything you need to get started.
+>
+> [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?repo=SebastianKuehnau/talk-tracker&ref=events/springio-26/step/02-simple-data-view-start)
