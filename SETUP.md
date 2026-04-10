@@ -11,7 +11,9 @@ git clone --branch events/springio-26/step/01-first-view --single-branch https:/
 cd talk-tracker
 ```
 
-Or download the project as a [ZIP file](https://github.com/SebastianKuehnau/talk-tracker/archive/refs/heads/main.zip).
+Or download the project as a [ZIP file](https://github.com/SebastianKuehnau/talk-tracker/archive/refs/heads/events/springio-26/step/01-first-view.zip).
+
+
 
 ### 2. Download dependencies, build, and run the application
 
