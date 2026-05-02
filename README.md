@@ -1,31 +1,29 @@
 # Talk Tracker
 
-A Spring Boot + Vaadin application for managing conference talks with AI-powered summarization and live registration tracking.
+A Spring Boot + Vaadin application for browsing JAX 2026 conference talks with a conversational AI assistant.
 
 ## What does this project do?
 
-Talk Tracker is a web application for managing conference talks:
+Talk Tracker displays the real JAX 2026 conference schedule and lets you explore it through natural language:
 
-- **View & filter talks** — Grid with lazy loading and real-time text filter (title, speaker, description, language, category)
-- **Create, edit & delete talks** — Form with Bean Validation
-- **AI summarization** — Summarize talk descriptions into a single sentence using OpenAI
-- **Live registrations** — Simulated attendee registrations updating every 300ms via Vaadin Push
+- **Browse talks** — Grid with title, speaker, room, date, time, and tracks
+- **Conversational AI filter** — Type queries like "Show me morning workshops on Monday" and the AI filters the grid via tool-calling (Spring AI + OpenAI)
 
 ## Tech Stack
 
-| Technology | Version |
-|---|---|
-| Java | 21 |
-| Spring Boot | 4.0.5 |
-| Vaadin (Flow) | 25.1 |
-| Spring AI (OpenAI) | 2.0.0-M3 |
-| Database | H2 (in-memory) |
+| Technology | Version         |
+|---|-----------------|
+| Java | 25              |
+| Spring Boot | 4.0.6           |
+| Vaadin (Flow) | 25.1.4          |
+| Spring AI (OpenAI) | 2.0.0-M5        |
+| Database | H2 (in-memory)  |
 | Build | Maven (Wrapper) |
 
 ## Prerequisites
 
-- **Java 21** (JDK) — e.g. via [SDKMAN](https://sdkman.io/): `sdk install java 21-tem`
-- **OpenAI API Key** — required for the AI summarization feature
+- **Java 25** (JDK) — e.g. via [SDKMAN](https://sdkman.io/): `sdk install java 25-tem`
+- **OpenAI API Key** — required for the AI chat feature
 
 ## Getting Started
 
@@ -50,7 +48,7 @@ Alternatively, set it directly in `src/main/resources/application.properties` (d
 ./mvnw spring-boot:run
 ```
 
-The browser opens automatically. If not: [http://localhost:8080](http://localhost:8080)
+Open [http://localhost:8080](http://localhost:8080) in your browser.
 
 ### 4. Run tests
 
@@ -59,33 +57,25 @@ The browser opens automatically. If not: [http://localhost:8080](http://localhos
 ./mvnw test
 
 # Single test class
-./mvnw test -Dtest=TalkDetailsViewTest
+./mvnw test -Dtest=TalkDetailViewTest
 ```
 
 ## Project Structure
 
 ```
 src/main/java/dev/workshop/vaadin/talktracker/
-├── TalkTrackerApplication.java         # Entry point
+├── TalkTrackerApplication.java         # Entry point (@Push, @PWA, Aura theme)
 ├── data/
-│   ├── Talk.java                       # Entity: conference talk
-│   ├── Category.java                   # Entity: category
-│   ├── TalkRepository.java            # JPA Repository
-│   ├── CategoryRepository.java        # JPA Repository
-│   └── DataInitializer.java           # 20 sample talks & 6 categories
-├── service/
-│   ├── SummaryAgent.java              # Spring AI ChatClient
-│   └── RegistrationMockService.java   # Simulated live registrations
+│   ├── Talk.java                       # Entity: title, speaker, tracks, format, date/time, room
+│   ├── TalkRepository.java             # JPA Repository + JpaSpecificationExecutor + @EntityGraph
+│   └── DataInitializer.java           # Seeds real JAX 2026 schedule (5 days, May 4–8 2026)
 └── ui/
-    ├── MainLayout.java                # AppLayout with navigation
     └── talks/
-        ├── TalkDetailsView.java       # Main view (grid + form)
-        ├── TalkGrid.java              # Grid component
-        └── TalkForm.java             # Form component
+        └── TalkListView.java          # Main view: Grid + chat UI + AI tool-calling logic
 ```
 
 ## Notes
 
-- The H2 database is in-memory — data is lost on restart. 20 sample talks are created automatically on startup.
-- Without a valid `OPENAI_API_KEY`, the summarization feature won't work, but the rest of the app runs normally.
-- Actuator endpoints are available at `/actuator/health`, `/actuator/metrics`, `/actuator/prometheus`.
+- The H2 database is in-memory — data resets on restart. The JAX 2026 schedule is re-seeded automatically.
+- Without a valid `OPENAI_API_KEY`, the AI chat won't respond, but the grid still shows all talks.
+- The AI uses tool-calling: it invokes `getAllTalks()` to read the schedule and `filterTalks(ids)` to update the grid — no keyword search, pure natural language.

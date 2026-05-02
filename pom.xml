@@ -5,16 +5,31 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.5</version>
+		<version>4.0.6</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>dev.workshop.vaadin</groupId>
 	<artifactId>talk-tracker</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>0.0.1-SNAPSHOT</version>
+	<name/>
+	<description/>
+	<url/>
+	<licenses>
+		<license/>
+	</licenses>
+	<developers>
+		<developer/>
+	</developers>
+	<scm>
+		<connection/>
+		<developerConnection/>
+		<tag/>
+		<url/>
+	</scm>
 	<properties>
-		<java.version>21</java.version>
-		<spring-ai.version>2.0.0-M3</spring-ai.version>
-		<vaadin.version>25.1.0</vaadin.version>
+		<java.version>25</java.version>
+		<spring-ai.version>2.0.0-M5</spring-ai.version>
+		<vaadin.version>25.1.4</vaadin.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -23,37 +38,41 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-validation</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc</artifactId>
-		</dependency>
+        <!-- Vaadin Dev Server (dev mode only) and Copilot (AI Frontend Tool)
+            - Vite dev server for frontend resources with hot module replacement
+            - Live reload on Java code changes
+            - Development tools / Copilot integration
+            - Unoptimized frontend bundling for faster startup -->
 		<dependency>
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-dev</artifactId>
 			<optional>true</optional>
+			<exclusions>
+				<exclusion>
+					<groupId>com.vaadin</groupId>
+					<artifactId>copilot</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
+        <!-- vaadin-spring-boot-starter: Core Vaadin integration for Spring Boot
+           - Auto-configuration for Vaadin with embedded web server
+           - Spring dependency injection and Spring Security support
+           - Servlet registration and talk management
+           - Live reload with Spring Boot DevTools -->
 		<dependency>
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-spring-boot-starter</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.ai</groupId>
-			<artifactId>spring-ai-client-chat</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.ai</groupId>
 			<artifactId>spring-ai-starter-model-openai</artifactId>
 		</dependency>
+        <!-- spring-boot-devtools: Enables automatic server restart on classpath changes
+            - Vaadin detects the restart and triggers a browser live reload
+            - Uses a custom classloader to restart only application classes (faster than full restart)
+            - Session is preserved across restarts -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
@@ -67,7 +86,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
+			<artifactId>spring-boot-starter-data-jpa-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -78,6 +97,8 @@
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
+            <!-- vaadin-bom: Bill of Materials — aligns all Vaadin dependency versions
+                - Ensures consistent versions across vaadin-spring-boot-starter, vaadin-dev, etc. -->
 			<dependency>
 				<groupId>com.vaadin</groupId>
 				<artifactId>vaadin-bom</artifactId>
@@ -97,6 +118,10 @@
 
 	<build>
 		<plugins>
+            <!-- vaadin-maven-plugin: Handles frontend resource processing
+                - build-frontend: Bundles and optimizes JS/CSS for production
+                - Scans classpath for used components to create minimal bundles
+                - Generates production-ready frontend output (no Vite dev server needed) -->
 			<plugin>
 				<groupId>com.vaadin</groupId>
 				<artifactId>vaadin-maven-plugin</artifactId>
@@ -116,4 +141,5 @@
 			</plugin>
 		</plugins>
 	</build>
+
 </project>
