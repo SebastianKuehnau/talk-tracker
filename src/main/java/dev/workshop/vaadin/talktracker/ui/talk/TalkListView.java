@@ -7,8 +7,11 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 import dev.workshop.vaadin.talktracker.data.Talk;
 import dev.workshop.vaadin.talktracker.data.TalkRepository;
+import org.springframework.data.domain.Example;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -17,7 +20,6 @@ import java.util.stream.Collectors;
 @Route("")
 public class TalkListView extends VerticalLayout {
 
-    private final List<Talk> allTalks;
     private final Grid<Talk> grid;
 
     public TalkListView(TalkRepository talkRepository) {
@@ -28,8 +30,9 @@ public class TalkListView extends VerticalLayout {
         filterField.setWidthFull();
 
         grid = new Grid<>(Talk.class);
-        allTalks = talkRepository.findAll();
-        grid.setItems(allTalks);
+        grid.setItems(query ->
+                talkRepository.findAll(buildSpecification(filterField.getValue()), VaadinSpringDataHelpers.toSpringPageRequest(query)).stream(),
+                query -> Math.toIntExact(talkRepository.count(buildSpecification(filterField.getValue()))));
 
         grid.setColumns("title", "speaker", "room");
         grid.getColumnByKey("room").setFlexGrow(0).setSortable(true).setHeader("Room");
@@ -51,12 +54,18 @@ public class TalkListView extends VerticalLayout {
     }
 
     private void onFilter(AbstractField.ComponentValueChangeEvent<TextField, String> event) {
-        var lowerCaseValue = event.getValue().toLowerCase();
-        var filteredTalks = allTalks.stream()
-                .filter(talk -> talk.getTitle().toLowerCase().contains(lowerCaseValue) ||
-                        talk.getSpeaker().toLowerCase().contains(lowerCaseValue) ||
-                        talk.getRoom().toLowerCase().contains(lowerCaseValue))
-                .toList();
-        grid.setItems(filteredTalks);
+        grid.getDataProvider().refreshAll();
+    }
+
+    private Specification<Talk> buildSpecification(String filterValue) {
+        var lowerCaseValue = "%" + filterValue.toLowerCase() + "%";
+
+        return (root, query, cb) ->
+            cb.or(
+                    cb.like(cb.lower(root.get("title")), lowerCaseValue),
+                    cb.like(cb.lower(root.get("speaker")), lowerCaseValue),
+                    cb.like(cb.lower(root.get("room")), lowerCaseValue),
+                    cb.like(cb.lower(root.get("format")), lowerCaseValue)
+            );
     }
 }
