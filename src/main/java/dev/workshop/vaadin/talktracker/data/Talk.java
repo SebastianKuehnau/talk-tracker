@@ -3,6 +3,11 @@ package dev.workshop.vaadin.talktracker.data;
 import jakarta.persistence.*;
 import org.jspecify.annotations.NonNull;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.ArrayList;
+
 @Entity
 public class Talk {
     @Id
@@ -13,17 +18,24 @@ public class Talk {
     private String title;
 
     @NonNull
-    @Column(length = 5000)
-    private String description;
-
-    @NonNull
     private String speaker;
 
-    @NonNull
-    private String language;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    @CollectionTable(name = "talk_tracks", joinColumns = @JoinColumn(name = "talk_id"))
+    @Column(name = "track")
+    private List<Track> tracks = new ArrayList<>();
 
-    @ManyToOne
-    private Category category;
+    @Enumerated(EnumType.STRING)
+    private Format format;
+
+    private LocalDate startDate;
+
+    private LocalTime startTime;
+
+    private LocalTime endTime;
+
+    private String room;
 
     public Long getId() {
         return id;
@@ -41,14 +53,6 @@ public class Talk {
         this.title = title;
     }
 
-    public @NonNull String getDescription() {
-        return description;
-    }
-
-    public void setDescription(@NonNull String description) {
-        this.description = description;
-    }
-
     public @NonNull String getSpeaker() {
         return speaker;
     }
@@ -57,20 +61,94 @@ public class Talk {
         this.speaker = speaker;
     }
 
-    public @NonNull String getLanguage() {
-        return language;
+    public List<Track> getTracks() {
+        return tracks;
     }
 
-    public void setLanguage(@NonNull String language) {
-        this.language = language;
+    public void setTracks(List<Track> tracks) {
+        this.tracks = tracks;
     }
 
-    public Category getCategory() {
-        return category;
+    public Format getFormat() {
+        return format;
     }
 
-    public void setCategory(Category category) {
-        this.category = category;
+    public void setFormat(Format format) {
+        this.format = format;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public LocalTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(LocalTime endTime) {
+        this.endTime = endTime;
+    }
+
+    public String getRoom() {
+        return room;
+    }
+
+    public void setRoom(String room) {
+        this.room = room;
+    }
+
+    @Override
+    public String toString() {
+        return "Talk{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", speaker='" + speaker + '\'' +
+                ", format=" + format +
+                ", startDate=" + startDate +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
+                ", room='" + room + '\'' +
+                '}';
+    }
+
+    public enum Format {
+        KEYNOTE, SESSION, WORKSHOP, PANEL, LAB, SHORTTALK
+    }
+
+    public enum Track {
+        AGILE("Agile, People & Culture (JAX)"),
+        AGILE_FLOW("Agile Flow Day - Modern Productivity (JAX)"),
+        ARCH("Architecture & Design (JAX)"),
+        CLOUD("Clouds, Kubernetes & Serverless (JAX)"),
+        CORE_JAVA("Core Java & Languages (JAX)"),
+        DATA_ML("Data & Machine Learning (JAX)"),
+        DEVOPS("DevOps & CI/CD (JAX)"),
+        GEN_AI("Generative AI (JAX)"),
+        MICRO("Microservices & Modularisierung (JAX)"),
+        PERF_SEC("Performance & Security (JAX)"),
+        SERVER_JAVA("Serverside Java (JAX)"),
+        WEB_JS("Web Development & JavaScript (JAX)");
+
+        private final String displayName;
+
+        Track(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
     }
 }
-
