@@ -3,6 +3,10 @@ package dev.workshop.vaadin.talktracker.ui.talk;
 import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.messages.MessageList;
+import com.vaadin.flow.component.messages.MessageListItem;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -10,9 +14,15 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 import dev.workshop.vaadin.talktracker.data.Talk;
 import dev.workshop.vaadin.talktracker.data.TalkRepository;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.data.domain.Example;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,19 +30,22 @@ import java.util.stream.Collectors;
 @Route("")
 public class TalkListView extends VerticalLayout {
 
-    private final Grid<Talk> grid;
+    private final Notification aiFeedbackNotification = new Notification();
 
-    public TalkListView(TalkRepository talkRepository) {
+    private final Grid<Talk> grid;
+    private final ChatClient chatClient;
+    private final List<Talk> allTalks;
+
+    public TalkListView(TalkRepository talkRepository, ChatModel chatModel) {
+        chatClient = ChatClient.builder(chatModel).build();
+
         var filterField = new TextField("", "filter for ...");
         filterField.addValueChangeListener(this::onFilter);
-        filterField.setValueChangeMode(ValueChangeMode.TIMEOUT);
-        filterField.setValueChangeTimeout(500);
         filterField.setWidthFull();
 
         grid = new Grid<>(Talk.class);
-        grid.setItems(query ->
-                talkRepository.findAll(buildSpecification(filterField.getValue()), VaadinSpringDataHelpers.toSpringPageRequest(query)).stream(),
-                query -> Math.toIntExact(talkRepository.count(buildSpecification(filterField.getValue()))));
+        allTalks = talkRepository.findAll();
+        grid.setItems(allTalks);
 
         grid.setColumns("title", "speaker", "room");
         grid.getColumnByKey("room").setFlexGrow(0).setSortable(true).setHeader("Room");
@@ -51,21 +64,48 @@ public class TalkListView extends VerticalLayout {
 
         grid.setSizeFull();
         add(filterField, grid);
+
+        setSizeFull();
     }
 
     private void onFilter(AbstractField.ComponentValueChangeEvent<TextField, String> event) {
-        grid.getDataProvider().refreshAll();
+
+        var aiFeedbackMessage = new MessageListItem("", Instant.now(), "Assistant:");
+        aiFeedbackNotification.add(new MessageList(aiFeedbackMessage));
+        aiFeedbackNotification.setPosition(Notification.Position.BOTTOM_END);
+
+        chatClient.prompt()
+                .system("You are a helpful assistant and help the user to find the right talk and show it in a grid. " +
+                        "Keep the answer short.")
+                .user(event.getValue())
+                .tools(this)
+                .stream()
+                .content()
+                .subscribe(token -> getUI().ifPresent(
+                        ui -> ui.access(() -> aiFeedbackMessage.appendText(token))),
+                        throwable -> getUI().ifPresent(ui -> ui.access(() ->
+                                Notification.show("Error - " + throwable.getLocalizedMessage())
+                                        .addThemeVariants(NotificationVariant.ERROR))),
+                    () -> getUI().ifPresent(ui -> ui.access(() -> aiFeedbackNotification.setDuration(5000))));
+
+        aiFeedbackNotification.open();
     }
 
-    private Specification<Talk> buildSpecification(String filterValue) {
-        var lowerCaseValue = "%" + filterValue.toLowerCase() + "%";
+    @Tool(description = "Get a list of all scheduled conference talks with their id, title, category, speaker and language")
+    List<Talk> getAllTalks() {
+        return allTalks;
+    }
 
-        return (root, query, cb) ->
-            cb.or(
-                    cb.like(cb.lower(root.get("title")), lowerCaseValue),
-                    cb.like(cb.lower(root.get("speaker")), lowerCaseValue),
-                    cb.like(cb.lower(root.get("room")), lowerCaseValue),
-                    cb.like(cb.lower(root.get("format")), lowerCaseValue)
-            );
+    @Tool(description = "Filter the grid based on the filter")
+    void filterTalks(@ToolParam(description = "ids of the filtered talks") List<String> ids) {
+        var filteredList = this.allTalks.stream()
+                .filter(talk -> ids.contains(String.valueOf(talk.getId())))
+                .toList();
+        getUI().ifPresent(ui -> ui.access(() -> grid.setItems(filteredList)));
+    }
+
+    @Tool(description = "Current date and time")
+    LocalDateTime currentLocalDateTime() {
+        return LocalDateTime.now();
     }
 }

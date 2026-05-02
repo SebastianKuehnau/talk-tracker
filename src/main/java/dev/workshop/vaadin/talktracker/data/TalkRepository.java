@@ -7,8 +7,14 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.util.List;
+
 public interface TalkRepository extends JpaRepository<Talk, Long>,
         JpaSpecificationExecutor<Talk> {
+
+    @EntityGraph(attributePaths = "tracks")
+    @Override
+    List<Talk> findAll();
 
     @EntityGraph(attributePaths = "tracks")
     @Override
