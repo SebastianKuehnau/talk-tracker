@@ -31,7 +31,7 @@ public class TalkListView extends VerticalLayout {
 
     private final Notification aiFeedbackNotification = new Notification();
 
-    private final Grid<Talk> grid;
+    final Grid<Talk> grid;
     @org.jetbrains.annotations.NotNull
     private final TalkRepository talkRepository;
     private final ChatClient chatClient;
