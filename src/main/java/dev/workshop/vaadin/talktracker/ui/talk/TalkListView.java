@@ -14,6 +14,8 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 import dev.workshop.vaadin.talktracker.data.Talk;
 import dev.workshop.vaadin.talktracker.data.TalkRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.tool.annotation.Tool;
@@ -29,6 +31,8 @@ import java.util.stream.Collectors;
 
 @Route("")
 public class TalkListView extends VerticalLayout {
+
+    Logger logger = LoggerFactory.getLogger(TalkListView.class);
 
     private final Notification aiFeedbackNotification = new Notification();
 
@@ -97,9 +101,11 @@ public class TalkListView extends VerticalLayout {
     }
 
     @Tool(description = "Filter the grid based on the filter")
-    void filterTalks(@ToolParam(description = "ids of the filtered talks") List<String> ids) {
+    void filterTalks(@ToolParam(description = "ids of the filtered talks") List<Long> ids) {
+        logger.info("Filtering talks with ids {}", ids);
+
         var filteredList = this.allTalks.stream()
-                .filter(talk -> ids.contains(String.valueOf(talk.getId())))
+                .filter(talk -> ids.contains(talk.getId()))
                 .toList();
         getUI().ifPresent(ui -> ui.access(() -> grid.setItems(filteredList)));
     }
