@@ -18,5 +18,9 @@ public interface TalkRepository extends JpaRepository<Talk, Long>,
 
     @EntityGraph(attributePaths = "tracks")
     @Override
+    Page<Talk> findAll(Pageable pageable);
+
+    @EntityGraph(attributePaths = "tracks")
+    @Override
     Page<Talk> findAll(Specification<Talk> spec, Pageable pageable);
 }
