@@ -12,6 +12,8 @@ import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 import dev.workshop.vaadin.talktracker.data.Talk;
 import dev.workshop.vaadin.talktracker.data.TalkRepository;
 import jakarta.persistence.criteria.Predicate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.tool.annotation.Tool;
@@ -29,13 +31,12 @@ import java.util.stream.Collectors;
 @Route("")
 public class TalkListView extends VerticalLayout {
 
-    private final Notification aiFeedbackNotification = new Notification();
+    Logger logger = LoggerFactory.getLogger(TalkListView.class);
 
-    final Grid<Talk> grid;
-    @org.jetbrains.annotations.NotNull
+    private final Grid<Talk> grid;
+
     private final TalkRepository talkRepository;
     private final ChatClient chatClient;
-    private final List<Talk> allTalks;
     private final TextField filterField;
 
     public TalkListView(TalkRepository talkRepository, ChatModel chatModel) {
@@ -47,8 +48,9 @@ public class TalkListView extends VerticalLayout {
         filterField.setWidthFull();
 
         grid = new Grid<>(Talk.class);
-        allTalks = talkRepository.findAll();
-        grid.setItems(allTalks);
+        grid.setItems(
+                query -> talkRepository.findAll(VaadinSpringDataHelpers.toSpringPageRequest(query)).stream(),
+                query -> Math.toIntExact(talkRepository.count()));
 
         grid.setColumns("title", "speaker", "room");
         grid.getColumnByKey("room").setFlexGrow(0).setSortable(true).setHeader("Room");
@@ -80,8 +82,14 @@ public class TalkListView extends VerticalLayout {
         filterField.setEnabled(false);
 
         chatClient.prompt()
-                .system("You are a helpful assistant and help the user to find the right talk and show it in a grid. " +
-                        "Keep the answer short.")
+                .system("""
+                        You are a helpful assistant that helps users find conference talks at JAX 2026 (May 4-8, 2026).
+                        You control a grid that displays talks. Use the searchTalks tool to filter the grid based on the user's request.
+                        Use showAllTalks to reset any active filter and show all talks again.
+                        Available tracks (use exact enum names): AGILE, AGILE_FLOW, ARCH, CLOUD, CORE_JAVA, DATA_ML, DEVOPS, GEN_AI, MICRO, PERF_SEC, SERVER_JAVA, WEB_JS.
+                        Available formats (use exact enum names): KEYNOTE, SESSION, WORKSHOP, PANEL, LAB, SHORTTALK.
+                        Don't show any return message.
+                        """)
                 .user(event.getValue())
                 .tools(this)
                 .stream()
@@ -96,30 +104,53 @@ public class TalkListView extends VerticalLayout {
                     })));
     }
 
-    @Tool(description = "Get a list of all scheduled conference talks with their id, title, category, speaker and language")
-    List<Talk> getAllTalks() {
-        return allTalks;
-    }
+    private static final String TRACK_PARAM_DESCRIPTION =
+            """                                                                                                                                       
+                Track enum values to filter by, or null. Use the enum name in the list.
+                Available tracks:
+                    AGILE       = "Agile, People & Culture (JAX)"
+                    AGILE_FLOW  = "Agile Flow Day - Modern Productivity (JAX)"
+                    ARCH        = "Architecture & Design (JAX)"
+                    CLOUD       = "Clouds, Kubernetes & Serverless (JAX)"
+                    CORE_JAVA   = "Core Java & Languages (JAX)"
+                    DATA_ML     = "Data & Machine Learning (JAX)"
+                    DEVOPS      = "DevOps & CI/CD (JAX)"
+                    GEN_AI      = "Generative AI (JAX)"
+                    MICRO       = "Microservices & Modularisierung (JAX)"
+                    PERF_SEC    = "Performance & Security (JAX)"
+                    SERVER_JAVA = "Serverside Java (JAX)"
+                    WEB_JS      = "Web Development & JavaScript (JAX)"
+                Example: ["GEN_AI", "DATA_ML"]
+            """;
 
     @Tool(description = """
-                Search and filter conference talks shown in the grid. All parameters are optional — pass null to ignore.
-                Returns the number of matching talks now shown in the grid.
+            Search and filter conference talks shown in the grid. All parameters are optional — pass null to ignore.
+            Tracks (exact enum names): AGILE, AGILE_FLOW, ARCH, CLOUD, CORE_JAVA, DATA_ML, DEVOPS, GEN_AI, MICRO, PERF_SEC, SERVER_JAVA, WEB_JS.
+            Formats (exact enum names): KEYNOTE, SESSION, WORKSHOP, PANEL, LAB, SHORTTALK.
+            Date format: yyyy-MM-dd (conference runs 2026-05-04 to 2026-05-08).
+            Time format: HH:mm.
+            Returns the number of matching talks now shown in the grid.
             """)
-    void filterTalks(
+    void searchTalks(
             @ToolParam(description = "Part of the talk title to match, or null") String title,
             @ToolParam(description = "Part of the speaker name to match, or null") String speaker,
-            @ToolParam(description = "Track enum values to filter by, e.g. [GEN_AI, DATA_ML], or null") List<String> tracks,
+            @ToolParam(description = "Track enum values... \n" + TRACK_PARAM_DESCRIPTION) List<String> tracks,
             @ToolParam(description = "Date as yyyy-MM-dd, or null") String date,
             @ToolParam(description = "Earliest start time as HH:mm (inclusive), or null") String startTimeFrom,
             @ToolParam(description = "Latest start time as HH:mm (inclusive), or null") String startTimeTo,
             @ToolParam(description = "Room name or partial match, or null") String room,
             @ToolParam(description = "Talk format enum value, or null") String format
     ) {
+        logger.info("searchTalks: title={}, speaker={}, language={}, tracks={}, date={}, startTimeFrom={}, startTimeTo={}, room={}, format={}",
+                title, speaker, tracks, date, startTimeFrom, startTimeTo, room, format);
+
         getUI().ifPresent(ui -> ui.access(() -> {
-            var spec = buildSpecification(title, speaker, tracks, date, startTimeFrom, startTimeTo, room, format);
+            Specification<Talk> talkSpecification = buildSpecification(title, speaker, tracks, date, startTimeFrom, startTimeTo, room, format);
             grid.setItems(
-                    query -> talkRepository.findAll(spec, VaadinSpringDataHelpers.toSpringPageRequest(query)).stream(),
-                    query -> Math.toIntExact(talkRepository.count(spec)));
+                    query -> talkRepository.findAll(talkSpecification,
+                            VaadinSpringDataHelpers.toSpringPageRequest(query)).stream(),
+                    query -> Math.toIntExact(talkRepository.count(talkSpecification))
+            );
         }));
     }
 
@@ -127,9 +158,10 @@ public class TalkListView extends VerticalLayout {
     LocalDateTime currentLocalDateTime() {
         return LocalDateTime.now();
     }
+
     private Specification<Talk> buildSpecification(String title, String speaker, List<String> tracks,
-                                          String date, String startTimeFrom, String startTimeTo,
-                                          String room, String format) {
+                                                   String date, String startTimeFrom, String startTimeTo,
+                                                   String room, String format) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
