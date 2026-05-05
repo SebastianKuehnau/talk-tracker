@@ -32,9 +32,8 @@ import java.util.stream.Collectors;
 @Route("")
 public class TalkListView extends VerticalLayout {
 
+    private final TextField filterField;
     Logger logger = LoggerFactory.getLogger(TalkListView.class);
-
-    private final Notification aiFeedbackNotification = new Notification();
 
     private final Grid<Talk> grid;
     private final ChatClient chatClient;
@@ -43,7 +42,7 @@ public class TalkListView extends VerticalLayout {
     public TalkListView(TalkRepository talkRepository, ChatModel chatModel) {
         chatClient = ChatClient.builder(chatModel).build();
 
-        var filterField = new TextField("", "filter for ...");
+        filterField = new TextField("", "filter for ...");
         filterField.addValueChangeListener(this::onFilter);
         filterField.setWidthFull();
 
@@ -74,25 +73,27 @@ public class TalkListView extends VerticalLayout {
 
     private void onFilter(AbstractField.ComponentValueChangeEvent<TextField, String> event) {
 
-        var aiFeedbackMessage = new MessageListItem("", Instant.now(), "Assistant:");
-        aiFeedbackNotification.add(new MessageList(aiFeedbackMessage));
-        aiFeedbackNotification.setPosition(Notification.Position.BOTTOM_END);
+        if (event.getValue() == null || event.getValue().isBlank()) {
+            return;
+        }
+
+        filterField.setEnabled(false);
 
         chatClient.prompt()
                 .system("You are a helpful assistant and help the user to find the right talk and show it in a grid. " +
-                        "Keep the answer short.")
+                        "Don't provide any additional information.")
                 .user(event.getValue())
                 .tools(this)
                 .stream()
                 .content()
-                .subscribe(token -> getUI().ifPresent(
-                        ui -> ui.access(() -> aiFeedbackMessage.appendText(token))),
+                .subscribe(token -> {},
                         throwable -> getUI().ifPresent(ui -> ui.access(() ->
                                 Notification.show("Error - " + throwable.getLocalizedMessage())
                                         .addThemeVariants(NotificationVariant.ERROR))),
-                    () -> getUI().ifPresent(ui -> ui.access(() -> aiFeedbackNotification.setDuration(5000))));
-
-        aiFeedbackNotification.open();
+                    () -> getUI().ifPresent(ui -> ui.access(() -> {
+                        filterField.setEnabled(true);
+                        filterField.clear();
+                    })));
     }
 
     @Tool(description = "Get a list of all scheduled conference talks with their id, title, category, speaker and language")
