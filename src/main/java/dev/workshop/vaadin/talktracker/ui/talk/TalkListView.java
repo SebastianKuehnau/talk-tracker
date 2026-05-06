@@ -128,7 +128,7 @@ public class TalkListView extends VerticalLayout {
             Search and filter conference talks shown in the grid. All parameters are optional — pass null to ignore.
             Tracks (exact enum names): AGILE, AGILE_FLOW, ARCH, CLOUD, CORE_JAVA, DATA_ML, DEVOPS, GEN_AI, MICRO, PERF_SEC, SERVER_JAVA, WEB_JS.
             Formats (exact enum names): KEYNOTE, SESSION, WORKSHOP, PANEL, LAB, SHORTTALK.
-            Date format: yyyy-MM-dd (conference runs 2026-05-04 to 2026-05-08).
+            Date format: yyyy-MM-dd-EEE (conference runs 2026-05-04 Monday to 2026-05-08 Friday).
             Time format: HH:mm.
             Returns the number of matching talks now shown in the grid.
             """)
