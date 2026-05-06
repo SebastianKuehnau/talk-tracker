@@ -80,8 +80,14 @@ public class TalkListView extends VerticalLayout {
         filterField.setEnabled(false);
 
         chatClient.prompt()
-                .system("You are a helpful assistant and help the user to find the right talk and show it in a grid. " +
-                        "Don't provide any additional information.")
+                .system("""
+                        You are a helpful assistant that helps users find conference talks at JAX 2026 (May 4-8, 2026).
+                                                You control a grid that displays talks. Use the searchTalks tool to filter the grid based on the user's request.
+                                                Use showAllTalks to reset any active filter and show all talks again.
+                                                Available tracks (use exact enum names): AGILE, AGILE_FLOW, ARCH, CLOUD, CORE_JAVA, DATA_ML, DEVOPS, GEN_AI, MICRO, PERF_SEC, SERVER_JAVA, WEB_JS.
+                                                Available formats (use exact enum names): KEYNOTE, SESSION, WORKSHOP, PANEL, LAB, SHORTTALK.
+                                                Don't show any return message.
+                        """)
                 .user(event.getValue())
                 .tools(this)
                 .stream()
@@ -96,12 +102,20 @@ public class TalkListView extends VerticalLayout {
                     })));
     }
 
-    @Tool(description = "Get a list of all scheduled conference talks with their id, title, category, speaker and language")
+    @Tool(description = "Get a list of all scheduled conference talks with their id, title, tracks, startDate, startTime, speaker and language")
     List<Talk> getAllTalks() {
+        logger.info("Getting all talks");
         return allTalks;
     }
 
-    @Tool(description = "Filter the grid based on the filter")
+    @Tool(description = """
+                Search and filter conference talks shown in the grid. All parameters are optional — pass null to ignore.
+                            Tracks (exact enum names): AGILE, AGILE_FLOW, ARCH, CLOUD, CORE_JAVA, DATA_ML, DEVOPS, GEN_AI, MICRO, PERF_SEC, SERVER_JAVA, WEB_JS.
+                            Formats (exact enum names): KEYNOTE, SESSION, WORKSHOP, PANEL, LAB, SHORTTALK.
+                            Date format: yyyy-MM-dd (conference runs 2026-05-04 to 2026-05-08).
+                            Time format: HH:mm.
+                            Returns the number of matching talks now shown in the grid.
+            """)
     void filterTalks(@ToolParam(description = "ids of the filtered talks") List<Long> ids) {
         logger.info("Filtering talks with ids {}", ids);
 
